@@ -1,6 +1,9 @@
 package measurement
 
-import "go.uber.org/zap"
+import (
+	"github.com/dustin/go-humanize"
+	"go.uber.org/zap"
+)
 
 func PrintResults(measurements []*Measurement) {
 
@@ -17,6 +20,9 @@ func PrintResults(measurements []*Measurement) {
 			totalBlockSize += b.BlockSize
 		}
 
+		blockThroughput := float64(len(m.Blocks)) / streamTime.Seconds()
+		sizeThroughput := float64(totalBlockSize) / streamTime.Seconds()
+
 		zlog.Info("worker results",
 			zap.Int("worker_id", m.WorkerId),
 			zap.Int64("start_block", m.RequestOptions.StartBlockNum),
@@ -25,6 +31,9 @@ func PrintResults(measurements []*Measurement) {
 			zap.Duration("total_time", totalTime),
 			zap.Duration("time_to_first_block", timeToFirstBlock),
 			zap.Duration("stream_time", streamTime),
+			zap.String("total_size", humanize.Bytes(uint64(totalBlockSize))),
+			zap.Int("blocks_per_second", int(blockThroughput)),
+			zap.String("bytes_per_second", humanize.Bytes(uint64(sizeThroughput))),
 		)
 	}
 }

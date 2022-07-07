@@ -28,9 +28,11 @@ func init() {
 
 func main() {
 
-	startBlockPtr := flag.Int("start-block", 0, "")
-	blockRangePtr := flag.Int("block-range", 10000, "")
-	connectionsPtr := flag.Int("connections", 10, "")
+	startBlockPtr := flag.Int("start-block", 0, "Start block to start the measuring from")
+	blockRangePtr := flag.Int("block-range", 10000, "Block range for each connection")
+	connectionsPtr := flag.Int("connections", 10, "Number of concurrent connections to measure")
+	insecurePtr := flag.Bool("insecure", false, "Skip TLS certificate verification")
+	plaintextPtr := flag.Bool("plaintext", false, "Use plaintext connection")
 	hostsPtr := flag.String("hosts", "", "Comma separated list of hosts")
 	authEndpoint := flag.String("auth-endpoint", "https://auth.eosnation.io", "")
 
@@ -39,8 +41,6 @@ func main() {
 	workerPool := make([]*measurement.Worker, *connectionsPtr)
 	hosts := strings.Split(*hostsPtr, ",")
 	wg := &sync.WaitGroup{}
-
-	zlog.Info("connections pointer", zap.Any("connectionsPtr", connectionsPtr))
 
 	// init workers
 	for i := 0; i < *connectionsPtr; i++ {
@@ -51,7 +51,7 @@ func main() {
 			StopBlockNum:  uint64(*startBlockPtr + (i * *blockRangePtr) + *blockRangePtr),
 			ForkSteps:     []pbfirehose.ForkStep{pbfirehose.ForkStep_STEP_NEW},
 		}
-		workerStream, err := newStream(context.Background(), *authEndpoint, workerEndpoint, requestOptions)
+		workerStream, err := newStream(context.Background(), *authEndpoint, workerEndpoint, *insecurePtr, *plaintextPtr, requestOptions)
 		if err != nil {
 			zlog.Fatal("failed to initialise stream", zap.Error(err))
 		}
@@ -63,13 +63,15 @@ func main() {
 		zlog.Info("initialised worker", zap.Int("id", i), zap.String("host", workerEndpoint), zap.Any("request_options", requestOptions))
 	}
 
+	zlog.Info("starting measurement...")
+
 	for _, w := range workerPool {
 		go w.StartMeasurement()
 	}
 
 	wg.Wait()
 
-	zlog.Info("finished measurement")
+	zlog.Info("done")
 	measurements := make([]*measurement.Measurement, len(workerPool))
 	for i, w := range workerPool {
 		measurements[i] = w.GetResults()
@@ -78,7 +80,7 @@ func main() {
 	measurement.PrintResults(measurements)
 }
 
-func newStream(ctx context.Context, authEndpoint, endpoint string, requestOptions *pbfirehose.Request) (stream pbfirehose.Stream_BlocksClient, err error) {
+func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn, plaintextConn bool, requestOptions *pbfirehose.Request) (stream pbfirehose.Stream_BlocksClient, err error) {
 
 	var clientOptions []dfuse.ClientOption
 	skipAuth := false
@@ -102,20 +104,17 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, requestOption
 		return nil, fmt.Errorf("unable to create streamingfast client")
 	}
 
-	useInsecureTSLConnection := viper.GetBool("global-insecure")
-	usePlainTextConnection := viper.GetBool("global-plaintext")
-
-	if useInsecureTSLConnection && usePlainTextConnection {
+	if insecureConn && plaintextConn {
 		return nil, fmt.Errorf("option --insecure and --plaintext are mutually exclusive, they cannot be both specified at the same time")
 	}
 
 	var dialOptions []grpc.DialOption
 	switch {
-	case usePlainTextConnection:
+	case plaintextConn:
 		zlog.Debug("Configuring transport to use a plain text connection")
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-	case useInsecureTSLConnection:
+	case insecureConn:
 		zlog.Debug("Configuring transport to use an insecure TLS connection (skips certificate verification)")
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
