@@ -1,14 +1,19 @@
 # Measurement tool for firehose performance
 
+## Build
+
+```shell
+go build 
+```
+
 ## Run
 
 ```shell
 export STREAMINGFAST_API_KEY=...
-go build 
 ./sf-perf 
 ```
 
-### Parameters 
+### Parameters
 
 ```shell
 Usage of ./sf-perf:
