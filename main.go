@@ -23,7 +23,7 @@ import (
 )
 
 func init() {
-	logging.ApplicationLogger("sf", "github.com/pinax-network/firehose-perf-tool")
+	logging.ApplicationLogger("sf-perf", "github.com/pinax-network/firehose-perf-tool")
 }
 
 func main() {

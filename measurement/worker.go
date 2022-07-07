@@ -65,6 +65,8 @@ func (n *Worker) StartMeasurement() {
 		}
 
 		n.measurement.Blocks = append(n.measurement.Blocks, blockResult)
+		// we don't know the exact block number as we don't parse the result, but we estimate by incrementing from the start block
+		estimatedBlockNum++
 	}
 }
 
