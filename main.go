@@ -17,9 +17,11 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/oauth"
 	"os"
+	"os/signal"
 	"sf-perf/measurement"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 func init() {
@@ -34,6 +36,7 @@ func main() {
 	insecurePtr := flag.Bool("insecure", false, "Skip TLS certificate verification")
 	plaintextPtr := flag.Bool("plaintext", false, "Use plaintext connection")
 	hostsPtr := flag.String("hosts", "", "Comma separated list of hosts")
+	headPtr := flag.Bool("head", false, "Ignores start-block and block-range settings and tests live blocks only")
 	authEndpoint := flag.String("auth-endpoint", "https://auth.eosnation.io", "")
 
 	flag.Parse()
@@ -45,10 +48,18 @@ func main() {
 	// init workers
 	for i := 0; i < *connectionsPtr; i++ {
 
+		startBlockNum := int64(*startBlockPtr + (i * *blockRangePtr))
+		stopBlockNum := uint64(*startBlockPtr + (i * *blockRangePtr) + *blockRangePtr)
+
+		if *headPtr {
+			startBlockNum = -1
+			stopBlockNum = 0xFFFFFFFFFFFFFFFF
+		}
+
 		workerEndpoint := hosts[i%len(hosts)]
 		requestOptions := &pbfirehose.Request{
-			StartBlockNum: int64(*startBlockPtr + (i * *blockRangePtr)),
-			StopBlockNum:  uint64(*startBlockPtr + (i * *blockRangePtr) + *blockRangePtr),
+			StartBlockNum: startBlockNum,
+			StopBlockNum:  stopBlockNum,
 			ForkSteps:     []pbfirehose.ForkStep{pbfirehose.ForkStep_STEP_NEW},
 		}
 		workerStream, err := newStream(context.Background(), *authEndpoint, workerEndpoint, *insecurePtr, *plaintextPtr, requestOptions)
@@ -68,6 +79,16 @@ func main() {
 	for _, w := range workerPool {
 		go w.StartMeasurement()
 	}
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		zlog.Info("notifying workers about shutdown...")
+		for _, w := range workerPool {
+			w.StopMeasurement()
+		}
+	}()
 
 	wg.Wait()
 

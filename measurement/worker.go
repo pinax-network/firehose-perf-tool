@@ -2,6 +2,7 @@ package measurement
 
 import (
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
 	"io"
@@ -14,6 +15,7 @@ type Worker struct {
 	wg          *sync.WaitGroup
 	stream      pbfirehose.Stream_BlocksClient
 	measurement *Measurement
+	shutdown    *atomic.Bool
 }
 
 type Measurement struct {
@@ -31,9 +33,10 @@ type BlockResult struct {
 
 func NewWorker(id int, wg *sync.WaitGroup, stream pbfirehose.Stream_BlocksClient, requestOptions *pbfirehose.Request) *Worker {
 	return &Worker{
-		id:     id,
-		wg:     wg,
-		stream: stream,
+		id:       id,
+		wg:       wg,
+		stream:   stream,
+		shutdown: atomic.NewBool(false),
 		measurement: &Measurement{
 			WorkerId:       id,
 			RequestOptions: requestOptions,
@@ -49,7 +52,7 @@ func (n *Worker) StartMeasurement() {
 
 	for {
 		response, err := n.stream.Recv()
-		if err == io.EOF {
+		if err == io.EOF || n.shutdown.Load() {
 			// we are done here
 			n.wg.Done()
 			return
@@ -68,6 +71,10 @@ func (n *Worker) StartMeasurement() {
 		// we don't know the exact block number as we don't parse the result, but we estimate by incrementing from the start block
 		estimatedBlockNum++
 	}
+}
+
+func (n *Worker) StopMeasurement() {
+	n.shutdown.Store(true)
 }
 
 func (n *Worker) GetResults() *Measurement {
