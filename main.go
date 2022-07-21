@@ -145,7 +145,7 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn,
 		return nil, fmt.Errorf("unable to create external gRPC client")
 	}
 
-	grpcCallOpts := []grpc.CallOption{}
+	grpcCallOpts := []grpc.CallOption{grpc.WaitForReady(true)}
 
 	if !skipAuth {
 		tokenInfo, err := client.GetAPITokenInfo(ctx)

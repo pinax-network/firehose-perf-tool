@@ -58,6 +58,7 @@ func (n *Worker) StartMeasurement() {
 			return
 		} else if err != nil {
 			zlog.Error("measurement failed", zap.Int("worker_id", n.id), zap.Error(err))
+			n.wg.Done()
 			return
 		}
 
