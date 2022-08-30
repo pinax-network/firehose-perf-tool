@@ -18,7 +18,7 @@ export STREAMINGFAST_API_KEY=...
 ```shell
 Usage of ./sf-perf:
   -auth-endpoint string
-        Authentication endpoint to retrieve access tokens from. (default "https://auth.eosnation.io")
+        Authentication endpoint to retrieve access tokens from. (default "https://auth.pinax.network")
   -block-range int
         Block range for each connection (default 10000)
   -connections int
