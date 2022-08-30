@@ -41,8 +41,9 @@ func main() {
 	plaintextPtr := flag.Bool("plaintext", false, "Use plaintext connection")
 	hostsPtr := flag.String("hosts", "", "Comma separated list of hosts")
 	headPtr := flag.Bool("head", false, "Ignores start-block and block-range settings and tests live blocks only")
-	authEndpointPtr := flag.String("auth-endpoint", "https://auth.eosnation.io", "Authentication endpoint to retrieve access tokens from.")
+	authEndpointPtr := flag.String("auth-endpoint", "https://auth.pinax.network", "Authentication endpoint to retrieve access tokens from.")
 	compressionPtr := flag.Bool("compression", false, "apply gzip compression on the grpc connection")
+
 	ethLogFilterPtr := flag.String("eth-log-filter-multi", "", "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters.")
 	ethCallFilterPtr := flag.String("eth-call-filter-multi", "", "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters.")
 
