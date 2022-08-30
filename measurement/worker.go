@@ -1,6 +1,7 @@
 package measurement
 
 import (
+	"errors"
 	pbfirehose "github.com/streamingfast/pbgo/sf/firehose/v1"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
@@ -52,7 +53,7 @@ func (n *Worker) StartMeasurement() {
 
 	for {
 		response, err := n.stream.Recv()
-		if err == io.EOF || n.shutdown.Load() {
+		if errors.Is(err, io.EOF) || n.shutdown.Load() {
 			// we are done here
 			n.wg.Done()
 			return
