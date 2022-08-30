@@ -159,7 +159,7 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn,
 	firehoseClient := pbfirehose.NewStreamClient(conn)
 
 	zlog.Debug("Initiating stream with remote endpoint", zap.String("endpoint", endpoint))
-	stream, err = firehoseClient.Blocks(context.Background(), requestOptions, grpcCallOpts...)
+	stream, err = firehoseClient.Blocks(ctx, requestOptions, grpcCallOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to start blocks stream: %w", err)
 	}

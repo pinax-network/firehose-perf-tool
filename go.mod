@@ -9,6 +9,7 @@ require (
 	github.com/streamingfast/dgrpc v0.0.0-20211210152421-f8cec68e0383
 	github.com/streamingfast/logging v0.0.0-20220511154537-ce373d264338
 	github.com/streamingfast/pbgo v0.0.6-0.20220217163624-f09d2a191000
+	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
 	google.golang.org/grpc v1.44.0
@@ -56,7 +57,6 @@ require (
 	github.com/stretchr/testify v1.7.4 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/net v0.0.0-20220706163947-c90051bbdb60 // indirect
