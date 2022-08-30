@@ -7,8 +7,10 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/streamingfast/client-go v0.1.1-0.20220215005344-ebb57842b6ad
 	github.com/streamingfast/dgrpc v0.0.0-20211210152421-f8cec68e0383
+	github.com/streamingfast/eth-go v0.0.0-20220210031611-2c699bfe3163
 	github.com/streamingfast/logging v0.0.0-20220511154537-ce373d264338
 	github.com/streamingfast/pbgo v0.0.6-0.20220217163624-f09d2a191000
+	github.com/streamingfast/streamingfast-client v0.1.3-0.20220520145230-531ad20f5c09
 	go.uber.org/atomic v1.9.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
@@ -25,6 +27,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.49 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
+	github.com/btcsuite/btcd v0.22.0-beta // indirect
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect

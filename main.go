@@ -16,8 +16,10 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/oauth"
+	"google.golang.org/protobuf/types/known/anypb"
 	"os"
 	"os/signal"
+	"sf-perf/chain"
 	"sf-perf/measurement"
 	"strings"
 	"sync"
@@ -37,13 +39,42 @@ func main() {
 	plaintextPtr := flag.Bool("plaintext", false, "Use plaintext connection")
 	hostsPtr := flag.String("hosts", "", "Comma separated list of hosts")
 	headPtr := flag.Bool("head", false, "Ignores start-block and block-range settings and tests live blocks only")
-	authEndpoint := flag.String("auth-endpoint", "https://auth.eosnation.io", "")
+	authEndpointPtr := flag.String("auth-endpoint", "https://auth.eosnation.io", "Authentication endpoint to retrieve access tokens from.")
+
+	ethLogFilterPtr := flag.String("eth-log-filter-multi", "", "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters.")
+	ethCallFilterPtr := flag.String("eth-call-filter-multi", "", "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters.")
 
 	flag.Parse()
 
 	workerPool := make([]*measurement.Worker, *connectionsPtr)
 	hosts := strings.Split(*hostsPtr, ",")
 	wg := &sync.WaitGroup{}
+
+	// parse filters
+	transforms := []*anypb.Any{}
+
+	ethLogFilter := strings.Split(*ethLogFilterPtr, ",")
+	zlog.Info("ethLogFilter", zap.Any("filter", ethLogFilter))
+	if len(ethLogFilter) > 0 && ethLogFilter[0] != "" {
+		mft, err := chain.ParseMultiLogFilter(ethLogFilter)
+		if err != nil {
+			zlog.Fatal("failed to parse eth multi log filer", zap.Error(err))
+		}
+		if mft != nil {
+			transforms = append(transforms, mft)
+		}
+	}
+
+	ethCallFilter := strings.Split(*ethCallFilterPtr, ",")
+	if len(ethCallFilter) > 0 && ethCallFilter[0] != "" {
+		mft, err := chain.ParseMultiCallToFilter(ethCallFilter)
+		if err != nil {
+			zlog.Fatal("failed to parse eth multi call filer", zap.Error(err))
+		}
+		if mft != nil {
+			transforms = append(transforms, mft)
+		}
+	}
 
 	// init workers
 	for i := 0; i < *connectionsPtr; i++ {
@@ -62,7 +93,12 @@ func main() {
 			StopBlockNum:  stopBlockNum,
 			ForkSteps:     []pbfirehose.ForkStep{pbfirehose.ForkStep_STEP_NEW},
 		}
-		workerStream, err := newStream(context.Background(), *authEndpoint, workerEndpoint, *insecurePtr, *plaintextPtr, requestOptions)
+
+		if len(transforms) > 0 {
+			requestOptions.Transforms = transforms
+		}
+
+		workerStream, err := newStream(context.Background(), *authEndpointPtr, workerEndpoint, *insecurePtr, *plaintextPtr, requestOptions)
 		if err != nil {
 			zlog.Fatal("failed to initialise stream", zap.Error(err))
 		}
@@ -107,7 +143,9 @@ func main() {
 		zap.Boolp("plaintext", plaintextPtr),
 		zap.Stringp("hosts", hostsPtr),
 		zap.Boolp("head", headPtr),
-		zap.Stringp("auth-endpoint", authEndpoint),
+		zap.Stringp("auth-endpoint", authEndpointPtr),
+		zap.Stringp("eth-log-filter-multi", ethLogFilterPtr),
+		zap.Stringp("eth-call-filter-multi", ethCallFilterPtr),
 	)
 }
 
