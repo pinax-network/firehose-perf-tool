@@ -21,6 +21,8 @@ Usage of ./sf-perf:
         Authentication endpoint to retrieve access tokens from. (default "https://auth.pinax.network")
   -block-range int
         Block range for each connection (default 10000)
+  -compression
+        apply gzip compression on the grpc connection
   -connections int
         Number of concurrent connections to measure (default 10)
   -eth-call-filter-multi string
@@ -43,7 +45,6 @@ Usage of ./sf-perf:
 
 ```shell
 ./sf-perf -connections 3 -hosts eth.firehose.pinax.network:9000 -block-range 100 -eth-log-filter-multi 0x3a8778A58993bA4B941f85684D74750043A4bB5f:0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
-2022-08-30T15:53:53.105+0200 INFO (sf-perf) ethLogFilter {"filter": ["0x3a8778A58993bA4B941f85684D74750043A4bB5f:0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"]}
 2022-08-30T15:53:53.457+0200 INFO (sf-perf) initialised worker {"id": 0, "host": "eth.firehose.pinax.network:9000", "request_options": "stop_block_num:100 fork_steps:STEP_NEW transforms:{[type.googleapis.com/sf.ethereum.transform.v1.MultiLogFilter]:{log_filters:{addresses:\":\\x87x\\xa5\\x89\\x93\\xbaK\\x94\\x1f\\x85hMtu\\x00C\\xa4\\xbb_\" event_signatures:\"\\xdd\\xf2R\\xad\\x1b\\xe2ți°h\\xfc7\\x8d\\xaa\\x95+\\xa7\\xf1cġ\\x16(\\xf5ZM\\xf5#\\xb3\\xef\"}}}"}
 2022-08-30T15:53:54.061+0200 INFO (sf-perf) initialised worker {"id": 1, "host": "eth.firehose.pinax.network:9000", "request_options": "start_block_num:100 stop_block_num:200 fork_steps:STEP_NEW transforms:{[type.googleapis.com/sf.ethereum.transform.v1.MultiLogFilter]:{log_filters:{addresses:\":\\x87x\\xa5\\x89\\x93\\xbaK\\x94\\x1f\\x85hMtu\\x00C\\xa4\\xbb_\" event_signatures:\"\\xdd\\xf2R\\xad\\x1b\\xe2ți°h\\xfc7\\x8d\\xaa\\x95+\\xa7\\xf1cġ\\x16(\\xf5ZM\\xf5#\\xb3\\xef\"}}}"}
 2022-08-30T15:53:54.408+0200 INFO (sf-perf) initialised worker {"id": 2, "host": "eth.firehose.pinax.network:9000", "request_options": "start_block_num:200 stop_block_num:300 fork_steps:STEP_NEW transforms:{[type.googleapis.com/sf.ethereum.transform.v1.MultiLogFilter]:{log_filters:{addresses:\":\\x87x\\xa5\\x89\\x93\\xbaK\\x94\\x1f\\x85hMtu\\x00C\\xa4\\xbb_\" event_signatures:\"\\xdd\\xf2R\\xad\\x1b\\xe2ți°h\\xfc7\\x8d\\xaa\\x95+\\xa7\\xf1cġ\\x16(\\xf5ZM\\xf5#\\xb3\\xef\"}}}"}
