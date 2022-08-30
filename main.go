@@ -16,7 +16,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/oauth"
-	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/protobuf/types/known/anypb"
 	"os"
 	"os/signal"
@@ -191,6 +190,10 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn,
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
 
+	if compression {
+		dialOptions = append(dialOptions, grpc.WithDecompressor(grpc.NewGZIPDecompressor()))
+	}
+
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create external gRPC client")
@@ -207,9 +210,9 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn,
 		grpcCallOpts = append(grpcCallOpts, grpc.PerRPCCredentials(rpcCredentials))
 	}
 
-	if compression {
-		grpcCallOpts = append(grpcCallOpts, grpc.UseCompressor(gzip.Name))
-	}
+	//if compression {
+	//	grpcCallOpts = append(grpcCallOpts, grpc.UseCompressor(gzip.Name))
+	//}
 
 	firehoseClient := pbfirehose.NewStreamClient(conn)
 
