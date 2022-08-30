@@ -21,6 +21,7 @@ type Worker struct {
 
 type Measurement struct {
 	WorkerId       int
+	HasFailed      bool
 	RequestOptions *pbfirehose.Request
 	StartTime      time.Time
 	Blocks         []BlockResult
@@ -40,6 +41,7 @@ func NewWorker(id int, wg *sync.WaitGroup, stream pbfirehose.Stream_BlocksClient
 		shutdown: atomic.NewBool(false),
 		measurement: &Measurement{
 			WorkerId:       id,
+			HasFailed:      false,
 			RequestOptions: requestOptions,
 			Blocks:         make([]BlockResult, 0),
 		},
@@ -58,6 +60,7 @@ func (n *Worker) StartMeasurement() {
 			n.wg.Done()
 			return
 		} else if err != nil {
+			n.measurement.HasFailed = true
 			zlog.Error("measurement failed", zap.Int("worker_id", n.id), zap.Error(err))
 			n.wg.Done()
 			return

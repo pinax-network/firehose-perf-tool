@@ -14,8 +14,18 @@ func PrintResults(measurements []*Measurement) {
 	overallTimeToFirstBlock := time.Duration(0)
 	overallBlockThroughput := float64(0)
 	overallSizeThroughput := float64(0)
+	failedCnt := 0
 
 	for _, m := range measurements {
+		if m.HasFailed {
+			zlog.Info("failed worker",
+				zap.Int("worker_id", m.WorkerId),
+				zap.Int64("start_block", m.RequestOptions.StartBlockNum),
+				zap.Uint64("stop_block", m.RequestOptions.StopBlockNum),
+			)
+			failedCnt++
+			continue
+		}
 
 		totalTime := m.Blocks[len(m.Blocks)-1].BlockReceivedAt.Sub(m.StartTime)
 		overallTime += totalTime
@@ -54,6 +64,7 @@ func PrintResults(measurements []*Measurement) {
 
 	zlog.Info("result summary",
 		zap.Int("num_workers", len(measurements)),
+		zap.Int("failed_workers", failedCnt),
 		zap.Int("num_blocks", overallNumBlocks),
 		zap.Duration("avg_time", overallTime/time.Duration(len(measurements))),
 		zap.Duration("avg_time_to_first_block", overallTimeToFirstBlock/time.Duration(len(measurements))),
