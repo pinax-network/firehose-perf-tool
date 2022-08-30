@@ -97,8 +97,18 @@ func main() {
 	for i, w := range workerPool {
 		measurements[i] = w.GetResults()
 	}
-
 	measurement.PrintResults(measurements)
+
+	zlog.Info("input parameters",
+		zap.Intp("start-block", startBlockPtr),
+		zap.Intp("block-range", blockRangePtr),
+		zap.Intp("connections", connectionsPtr),
+		zap.Boolp("insecure", insecurePtr),
+		zap.Boolp("plaintext", plaintextPtr),
+		zap.Stringp("hosts", hostsPtr),
+		zap.Boolp("head", headPtr),
+		zap.Stringp("auth-endpoint", authEndpoint),
+	)
 }
 
 func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn, plaintextConn bool, requestOptions *pbfirehose.Request) (stream pbfirehose.Stream_BlocksClient, err error) {
