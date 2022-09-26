@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/credentials/oauth"
+	"google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/protobuf/types/known/anypb"
 	"os"
 	"os/signal"
@@ -42,7 +43,7 @@ func main() {
 	hostsPtr := flag.String("hosts", "", "Comma separated list of hosts")
 	headPtr := flag.Bool("head", false, "Ignores start-block and block-range settings and tests live blocks only")
 	authEndpointPtr := flag.String("auth-endpoint", "https://auth.pinax.network", "Authentication endpoint to retrieve access tokens from.")
-	compressionPtr := flag.Bool("compression", false, "apply gzip compression on the grpc connection")
+	gzipPtr := flag.Bool("gzip", false, "apply gzip compression on the grpc connection")
 
 	ethLogFilterPtr := flag.String("eth-log-filter-multi", "", "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters.")
 	ethCallFilterPtr := flag.String("eth-call-filter-multi", "", "Advanced filter. List of 'address[+address[+...]]:eventsig[+eventsig[+...]]' pairs, ex: 'dead+beef:1234+5678,:0x44,0x12:' results in 3 filters.")
@@ -100,7 +101,7 @@ func main() {
 			requestOptions.Transforms = transforms
 		}
 
-		workerStream, err := newStream(context.Background(), *authEndpointPtr, workerEndpoint, *insecurePtr, *plaintextPtr, *compressionPtr, requestOptions)
+		workerStream, err := newStream(context.Background(), *authEndpointPtr, workerEndpoint, *insecurePtr, *plaintextPtr, *gzipPtr, requestOptions)
 		if err != nil {
 			zlog.Fatal("failed to initialise stream", zap.Error(err))
 		}
@@ -143,7 +144,7 @@ func main() {
 		zap.Intp("connections", connectionsPtr),
 		zap.Boolp("insecure", insecurePtr),
 		zap.Boolp("plaintext", plaintextPtr),
-		zap.Boolp("compression", compressionPtr),
+		zap.Boolp("gzip", gzipPtr),
 		zap.Stringp("hosts", hostsPtr),
 		zap.Boolp("head", headPtr),
 		zap.Stringp("auth-endpoint", authEndpointPtr),
@@ -191,10 +192,6 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn,
 		dialOptions = []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{InsecureSkipVerify: true}))}
 	}
 
-	if compression {
-		dialOptions = append(dialOptions, grpc.WithDecompressor(grpc.NewGZIPDecompressor()))
-	}
-
 	conn, err := dgrpc.NewExternalClient(endpoint, dialOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create external gRPC client")
@@ -211,9 +208,9 @@ func newStream(ctx context.Context, authEndpoint, endpoint string, insecureConn,
 		grpcCallOpts = append(grpcCallOpts, grpc.PerRPCCredentials(rpcCredentials))
 	}
 
-	//if compression {
-	//	grpcCallOpts = append(grpcCallOpts, grpc.UseCompressor(gzip.Name))
-	//}
+	if compression {
+		grpcCallOpts = append(grpcCallOpts, grpc.UseCompressor(gzip.Name))
+	}
 
 	firehoseClient := pbfirehose.NewStreamClient(conn)
 
